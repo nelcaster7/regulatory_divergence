@@ -43,6 +43,8 @@ for i in APO IR64 F1;do
   fastqc -f fastq Rep2_${i}-C_1.fq Rep2_${i}-C_2.fq &
   fastqc -f fastq Rep2_${i}-S_1.fq Rep2_${i}-S_2.fq &
 done
+
+
 ====================================================
 #!/bin/bash
 for i in APO IR64;do 
