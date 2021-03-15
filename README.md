@@ -14,6 +14,7 @@ This includes PERL and Linux command line scripts
 
 
   2-1. FastQC 
+  
   2-2. FASTX Toolkit
 
 3. Mapping Method: Pseudo Reference
