@@ -4,8 +4,10 @@ This includes PERL and Linux command line scripts
 #Authors: Eric Tsai, Shumin Kao, Li-yu Liu, Nelzo Ereful
 
 #Bioinformatics pipeline
+Details are outlined here:
+https://github.com/nelcaster7/regulatory_divergence/blob/main/1_regulatory_divergence_pipeline.txt
 
-1. Data background 
+1. Dataset Assessment
 
 2. Quality control    
 
