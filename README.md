@@ -4,7 +4,10 @@ This includes PERL and Linux command line scripts
 #Authors: Eric Tsai, Shumin Kao, Li-yu Liu, Nelzo Ereful
 
 #Bioinformatics pipeline
+
 1. data:
+
+
 
 Rep1: (ir64, apo, f1)x(control, stress)  bp:38  Q33(quality score type)
 Rep2: (ir64, apo, f1)x(control, stress)  bp:90  Q64(quality score type)
@@ -32,6 +35,7 @@ Rep2_F1-S_1.fq Rep2_F1-S_2.fq
 download:http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.10.1.zip
 install README: http://www.bioinformatics.babraham.ac.uk/projects/fastqc/INSTALL.txt
 
+
 #!/bin/bash
 for i in APO IR64 F1;do              
   fastqc -f fastq Rep1_${i}-C_1.fq Rep1_${i}-C_2.fq &
@@ -45,6 +49,7 @@ for i in APO IR64;do
     fastqc -f fastq 1_${i}-C_l1_1.fq  1_${i}-C_l1_2.fq 
 done
 
+
 =====================================================
 
 2-2. FASTX Toolkit
@@ -56,6 +61,8 @@ for i in APO IR64 F1;do
   fastx_trimmer -t 10 -m 75 -v -i ../Raw_reads/Replicate2/Rep2_${i}-C_1.fq -o QC_Rep2_${i}-C_1.fq &
   fastx_trimmer -t 10 -m 75 -v -i ../Raw_reads/Replicate2/Rep2_${i}-C_2.fq -o QC_Rep2_${i}-C_2.fq &
 done
+
+
 
 
 3. Mapping Method: Pseudo Reference
@@ -113,6 +120,8 @@ for i in APO IR64 F1;do
   samtools sort Rep2_${i}-C.bam Rep2_${i}-C_sorted &
 done
 
+
+
 3-5. Samtools mpileup     
 
 
@@ -122,6 +131,15 @@ samtools mpileup -I -f MSU7_all.cdna Rep1_APO-C_sorted.bam Rep1_APO-S_sorted.bam
 samtools mpileup -I -f MSU7_all.cdna Rep2_APO-C_sorted.bam Rep2_APO-S_sorted.bam Rep2_IR64-C_sorted.bam Rep2_IR64-S_sorted.bam  > Rep2_pool_mpileup.txt &
 #samtools mpileup -I -f MSU7_all.cdna Rep1_F1-C_sorted.bam Rep1_F1-S_sorted.bam > Rep1_f1_mpileup.txt &
 #samtools mpileup -I -f MSU7_all.cdna Rep2_F1-C_sorted.bam Rep2_F1-S_sorted.bam > Rep2_f1_mpileup.txt &
+
+
+How did he combine the two reps?
+mapped separately and used mpileup using reference MSU7 cDNA
+{two replicates were pooled together then mapped against the MSU7. 
+We used 
+
+}
+
 
 
 
@@ -166,9 +184,20 @@ perl reference_commonbaseModify_checkok.pl MSU7_all.cdna all_pool_commonbase.txt
 perl reference_indelModify_checkok.pl mod_commonbase.fasta all_pool_indel.txt > modwithindel_ref.fasta
 
 
+
+        
+
+
 3-7 Pseudo Reference check
 
 bowtie2 -x MSU7 -q --phred33 -p 12 -1 test_1.fq  -2 test_2.fq | samtools view -bS - -o test.bam
+
+
+
+
+
+
+
 
 4. Mapping Method: SNP call  
 
@@ -199,6 +228,7 @@ for i in APO IR64 F1;do
 done
 
 
+
 4-3. Samtools sort
 
 
@@ -212,6 +242,8 @@ for i in APO IR64;do
   samtools sort mod_Rep2_${i}-S.bam mod_Rep2_${i}-S_sorted &
   samtools sort mod_Rep2_${i}-C.bam mod_Rep2_${i}-C_sorted &
 done
+
+
 
 4-4. Samtools mpileup                      
 
@@ -244,6 +276,9 @@ perl extract_ir64_1s.pl mod_Rep1_IR64-S.bam all_rep_snpcall.txt &
 perl extract_ir64_2c.pl mod_Rep2_IR64-C.bam all_rep_snpcall.txt &
 perl extract_ir64_2s.pl mod_Rep2_IR64-S.bam all_rep_snpcall.txt &
 
+
+
+
 6.  eXpress:  gene expression level
 
 Download:http://bio.math.berkeley.edu/eXpress/downloads/express-1.5.1/express-1.5.1-linux_x86_64.tgz
@@ -265,6 +300,9 @@ for i in APO IR64 F1; do
   express --output-dir express_Rep2_${i}_S modwithindel_ref.fasta mod_Rep2_${i}-S.bam &
 done
 
+
+
+
 6-2. read count of APO IR64 including SNP
 
 
@@ -276,6 +314,8 @@ samtools view -t modwithindel_ref.fasta.fai -Sb mod_Rep1_extract_IR64_c.sam | ex
 samtools view -t modwithindel_ref.fasta.fai -Sb mod_Rep2_extract_IR64_c.sam | express --output-dir rep2_express_e_ir64_c modwithindel_ref.fasta - &
 samtools view -t modwithindel_ref.fasta.fai -Sb mod_Rep1_extract_IR64_s.sam | express --output-dir rep1_express_e_ir64_s modwithindel_ref.fasta - &
 samtools view -t modwithindel_ref.fasta.fai -Sb mod_Rep1_extract_IR64_s.sam | express --output-dir rep2_express_e_ir64_s modwithindel_ref.fasta - &
+
+
 
 6-3. extract F1 read count
 
@@ -296,4 +336,21 @@ samtools view -t modwithindel_ref.fasta.fai -Sb Rep2_from_ir64_s.sam | express -
 6. Differential expression gene & Allelic imbalance test
 
 R file :   final.R
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
