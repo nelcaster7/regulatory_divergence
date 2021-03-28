@@ -1,0 +1,113 @@
+x=read.csv(file.choose()) #select "raw_cis_trans3.csv"
+
+gene.name = as.character(x[,1])
+count.matrix = as.matrix(x[,grep("raw",colnames(x))])
+spe = c("APO","APO","IR64","IR64","fromAPO","fromAPO","fromIR64","fromIR64",
+        "APO","APO","IR64","IR64","fromAPO","fromAPO","fromIR64","fromIR64")
+trt = rep(c("ctrl","stress"),each=8)
+
+library(DESeq2)
+#############################
+# normalize by DESeq2
+#############################
+trtMat = DataFrame(
+              spe = spe,
+              row.names = colnames(count.matrix))
+dds = DESeqDataSetFromMatrix(
+              countData = count.matrix,
+              colData = trtMat,
+              design = ~spe)
+dds = DESeq(dds)
+norm.cts = counts(dds,normalized=TRUE)
+write.table(data.frame(gene.name,norm.cts), file="norm_cis_trans3.csv",
+            col.names=c("ID",gsub("raw","norm",colnames(norm.cts))),
+            row.names=FALSE,sep=",",quote=FALSE)
+
+#########################################################
+# Prepare data for Fisher Exact and Binomial Exact test
+#########################################################
+sum.cts = round(counts(collapseReplicates(dds, spe),normalized=TRUE))
+sum.cts.trt = round(counts(collapseReplicates(dds, paste(spe,trt,sep="_")),normalized=TRUE))
+
+#########################################################
+# 1. Binomial Exact test
+#########################################################
+my.binom.test.pval = function(x,n){
+  tryCatch({
+    tt = binom.test(x,n)
+    return(tt$p.val)
+  }, error=function(e){return(NA)})# to exclude genes having all 0 read counts
+}
+p.binomP.all = p.binomP.trtC = p.binomP.trtS = p.binomF.all = p.binomF.trtC = p.binomF.trtS = c()
+for (i in 1:nrow(sum.cts)) {
+  p.binomP.all[i] = my.binom.test.pval(sum.cts[i,"APO"], sum(sum.cts[i,c("APO","IR64")]))
+  p.binomF.all[i] = my.binom.test.pval(sum.cts[i,"fromAPO"], sum(sum.cts[i,c("fromAPO","fromIR64")]))
+  p.binomP.trtC[i] = my.binom.test.pval(sum.cts.trt[i,"APO_ctrl"], sum(sum.cts.trt[i,c("APO_ctrl","IR64_ctrl")]))
+  p.binomF.trtC[i] = my.binom.test.pval(sum.cts.trt[i,"fromAPO_ctrl"], sum(sum.cts.trt[i,c("fromAPO_ctrl","fromIR64_ctrl")]))
+  p.binomP.trtS[i] = my.binom.test.pval(sum.cts.trt[i,"APO_stress"], sum(sum.cts.trt[i,c("APO_stress","IR64_stress")]))
+  p.binomF.trtS[i] = my.binom.test.pval(sum.cts.trt[i,"fromAPO_stress"], sum(sum.cts.trt[i,c("fromAPO_stress","fromIR64_stress")]))
+}
+
+#########################################################
+# 2. Fisher Exact test
+#########################################################
+my.fisher.test.pval = function(xm,n){
+  tryCatch({
+    tt = fisher.test(xm)
+    return(tt$p.val)
+  }, error=function(e){return(NA)})# to exclude genes having all 0 read counts
+}
+p.Fisher.all = p.Fisher.trtC = p.Fisher.trtS = c()
+for (i in 1:nrow(sum.cts)) {
+  p.Fisher.all[i] = my.fisher.test.pval(rbind(sum.cts[i,c("APO","IR64")],sum.cts[i,c("fromAPO","fromIR64")]))
+  p.Fisher.trtC[i] = my.fisher.test.pval(rbind(sum.cts.trt[i,c("APO_ctrl","IR64_ctrl")],sum.cts.trt[i,c("fromAPO_ctrl","fromIR64_ctrl")]))
+  p.Fisher.trtS[i] = my.fisher.test.pval(rbind(sum.cts.trt[i,c("APO_stress","IR64_stress")],sum.cts.trt[i,c("fromAPO_stress","fromIR64_stress")]))
+}
+
+#########################################################
+# 3. prepare output
+#########################################################
+determine.type = function(x, fdr.threshold){ # x=c(fP,fH,fT,signPF)
+  if (any(is.na(x))) return(NA)
+  if (x[1] < fdr.threshold & x[2] > fdr.threshold & x[3] < fdr.threshold) return("cis.only")
+  if (x[1] > fdr.threshold & x[2] < fdr.threshold & x[3] < fdr.threshold) return("compensatory")
+  if (x[1] < fdr.threshold & x[2] < fdr.threshold & x[3] < fdr.threshold & x[4] > 0) return("cis+trans")
+  if (x[1] < fdr.threshold & x[2] < fdr.threshold & x[3] < fdr.threshold & x[4] < 0) return("cis*trans")
+  else return("other")
+}
+
+# combined control and stress
+d1 = data.frame(sum.cts[,c("APO","IR64","fromAPO","fromIR64")],
+                p.binomP.all, fdr.binomP.all=p.adjust(p.binomP.all,method = "fdr"),
+                p.binomF.all, fdr.binomF.all=p.adjust(p.binomF.all,method = "fdr"),
+                p.Fisher.all, fdr.Fisher.all=p.adjust(p.Fisher.all,method = "fdr"),
+                signPF = apply(sum.cts[,c("APO","IR64")],1,diff)*apply(sum.cts[,c("fromAPO","fromIR64")],1,diff))
+d1.save = data.frame(d1, 
+                     type.fdr0.05=apply(d1[,c("fdr.binomP.all","fdr.binomF.all","fdr.Fisher.all","signPF")],1,determine.type,fdr.threshold=0.05),
+                     type.fdr0.01=apply(d1[,c("fdr.binomP.all","fdr.binomF.all","fdr.Fisher.all","signPF")],1,determine.type,fdr.threshold=0.01),
+                     type.fdr0.005=apply(d1[,c("fdr.binomP.all","fdr.binomF.all","fdr.Fisher.all","signPF")],1,determine.type,fdr.threshold=0.005))
+write.table(d1.save,file="type_cis_trans3.csv",sep=",",col.names=TRUE,row.names=FALSE,quote=FALSE)
+
+# control only
+d1 = data.frame(sum.cts.trt[,c("APO_ctrl","IR64_ctrl","fromAPO_ctrl","fromIR64_ctrl")],
+                p.binomP.trtC, fdr.binomP.trtC=p.adjust(p.binomP.trtC,method = "fdr"),
+                p.binomF.trtC, fdr.binomF.trtC=p.adjust(p.binomF.trtC,method = "fdr"),
+                p.Fisher.trtC, fdr.Fisher.trtC=p.adjust(p.Fisher.trtC,method = "fdr"),
+                signPF = apply(sum.cts[,c("APO","IR64")],1,diff)*apply(sum.cts[,c("fromAPO","fromIR64")],1,diff))
+d1.save = data.frame(d1, 
+                     type.fdr0.05=apply(d1[,c("fdr.binomP.trtC","fdr.binomF.trtC","fdr.Fisher.trtC","signPF")],1,determine.type,fdr.threshold=0.05),
+                     type.fdr0.01=apply(d1[,c("fdr.binomP.trtC","fdr.binomF.trtC","fdr.Fisher.trtC","signPF")],1,determine.type,fdr.threshold=0.01),
+                     type.fdr0.005=apply(d1[,c("fdr.binomP.trtC","fdr.binomF.trtC","fdr.Fisher.trtC","signPF")],1,determine.type,fdr.threshold=0.005))
+write.table(d1.save,file="type_cis_trans3_ctrl.csv",sep=",",col.names=TRUE,row.names=FALSE,quote=FALSE)
+
+# stress only
+d1 = data.frame(sum.cts.trt[,c("APO_stress","IR64_stress","fromAPO_stress","fromIR64_stress")],
+                p.binomP.trtS, fdr.binomP.trtS=p.adjust(p.binomP.trtS,method = "fdr"),
+                p.binomF.trtS, fdr.binomF.trtS=p.adjust(p.binomF.trtS,method = "fdr"),
+                p.Fisher.trtS, fdr.Fisher.trtS=p.adjust(p.Fisher.trtS,method = "fdr"),
+                signPF = apply(sum.cts[,c("APO","IR64")],1,diff)*apply(sum.cts[,c("fromAPO","fromIR64")],1,diff))
+d1.save = data.frame(d1, 
+                     type.fdr0.05=apply(d1[,c("fdr.binomP.trtS","fdr.binomF.trtS","fdr.Fisher.trtS","signPF")],1,determine.type,fdr.threshold=0.05),
+                     type.fdr0.01=apply(d1[,c("fdr.binomP.trtS","fdr.binomF.trtS","fdr.Fisher.trtS","signPF")],1,determine.type,fdr.threshold=0.01),
+                     type.fdr0.005=apply(d1[,c("fdr.binomP.trtS","fdr.binomF.trtS","fdr.Fisher.trtS","signPF")],1,determine.type,fdr.threshold=0.005))
+write.table(d1.save,file="type_cis_trans3_stress.csv",sep=",",col.names=TRUE,row.names=FALSE,quote=FALSE)
