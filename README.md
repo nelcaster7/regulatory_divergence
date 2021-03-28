@@ -19,7 +19,7 @@ https://github.com/nelcaster7/regulatory_divergence/blob/main/1_regulatory_diver
 
 6.  eXpress:  gene expression level
 
-7. Differential expression gene & Allelic imbalance test
+7. Differential expression gene & Allelic imbalance test (Binomial and Fisher exact tests)
 
 
 
