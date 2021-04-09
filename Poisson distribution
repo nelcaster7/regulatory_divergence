@@ -1,0 +1,18 @@
+
+#Poisson distribution for dissimilar read sizes
+Because of the dissimilar read sizes in sequencing protocol, we tested our datasets using Poisson test as noises in a sequencing experiment should be Poisson distributed. For replicates giving an estimate of expression for a given gene, they should be independently identically distributed from a Poisson distribution of rate lambda (up to library size scaling). 
+To easily check this for individual gene in our dataset, an example is to use the 'poisson.test' function in R; let's say for isoform LOC_Os01g01010.1 we have 573 reads from rep1 and 684 reads from rep2, then we estimated the library scaling factor as 13617386, 21700740 for rep1 and rep2, respectively.
+poisson.test(c(573, 684), c(13617386, 21700740)) gives a p-value of 4.414e-07 for the null hypothesis that they have the same rate ratio:
+
+> poisson.test(c(573, 684), c(13617386, 21700740)) 
+Comparison of Poisson rates
+data:  c(573, 684) time base: c(13617386, 21700740)
+count1 = 573, expected count1 = 484.65, p-value = 4.414e-07
+alternative hypothesis: true rate ratio is not equal to 1
+95 percent confidence interval:
+ 1.192649 1.493904
+sample estimates:
+rate ratio 
+  1.334994
+
+Of course, in high-throughput sequencing experiments you expect many small p-values by chance so we corrected for multiple testing to see what is significant when testing all genes.
