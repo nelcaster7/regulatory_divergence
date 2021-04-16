@@ -111,3 +111,16 @@ d1.save = data.frame(d1,
                      type.fdr0.01=apply(d1[,c("fdr.binomP.trtS","fdr.binomF.trtS","fdr.Fisher.trtS","signPF")],1,determine.type,fdr.threshold=0.01),
                      type.fdr0.005=apply(d1[,c("fdr.binomP.trtS","fdr.binomF.trtS","fdr.Fisher.trtS","signPF")],1,determine.type,fdr.threshold=0.005))
 write.table(d1.save,file="type_cis_trans3_stress.csv",sep=",",col.names=TRUE,row.names=FALSE,quote=FALSE)
+
+
+#Regulatory assignments:
+
+#Cis only: significant DE in both P and C. No significant T (FDRP < 0.5%, FDRC<0.5%, FDRT≥0.5%); 
+#Trans: Significant DE in P and T, but not C (FDRP < 0.5%, FDRC ≥ 0.5%, FDRT <0.5%); 
+#Cis + trans (synergistic): significant DE in P, C and T (FDRP < 0.5%, FDRC < 0.5%, FDRT <0.5%). The signs of the log2FC of these genes in the parental and hybrid are the same. Cis- and trans-regulatory differences favor expression of the same alleles; 
+#Cis × trans (antagonistic): significant DE in P, C and T (FDRP < 0.5%, FDRC <0.5%, FDRT <0.5%). The signs of the log2FC of these genes in the parental and hybrid are different. Cis and trans differences favor expression of opposite alleles; 
+#Compensatory: Significant DE in C but not P. Significant T (FDRP ≥ 0.5%, FDRC < 0.5%, FDRT < 0.5%);  
+#Ambiguous: statistical test exhibits significant DE in only one of the three tests and has no clear biological interpretations (e.g. FDRP ≥ 0.5%, FDRC ≥ 0.5%, FDRT < 0.5%). 
+#Conserved: No significant DE in P and C. No significant T (FDRP ≥ 0.5%, FDRC ≥ 0.5%, FDRT ≥ 0.5%);
+Both “conserved” and “ambiguous” genes were omitted from discussions.  
+
