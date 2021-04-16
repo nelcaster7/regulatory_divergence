@@ -122,5 +122,5 @@ write.table(d1.save,file="type_cis_trans3_stress.csv",sep=",",col.names=TRUE,row
 #Compensatory: Significant DE in C but not P. Significant T (FDRP ≥ 0.5%, FDRC < 0.5%, FDRT < 0.5%);  
 #Ambiguous: statistical test exhibits significant DE in only one of the three tests and has no clear biological interpretations (e.g. FDRP ≥ 0.5%, FDRC ≥ 0.5%, FDRT < 0.5%). 
 #Conserved: No significant DE in P and C. No significant T (FDRP ≥ 0.5%, FDRC ≥ 0.5%, FDRT ≥ 0.5%);
-Both “conserved” and “ambiguous” genes were omitted from discussions.  
+#Both “conserved” and “ambiguous” genes were omitted from discussions.  
 
