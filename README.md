@@ -1,5 +1,5 @@
 # regulatory_divergence
-This is a repository for scripts used in the research study entitled: Gene expression regulatory divergence between two rice ecotypes exposed under non- and water-stress conditions.
+This is a repository for scripts used in the research study entitled: Unraveling regulatory divergence, heterotic malleability, and allelic imbalance switching in rice due to drought stress.
 This includes PERL, R and Linux command line scripts
 #Authors: Eric Tsai, Shumin Kao, Li-yu Liu, Nelzo Ereful
 
