@@ -1,11 +1,9 @@
 # regulatory_divergence
----
 This is a repository for scripts used in the research study entitled: Unraveling regulatory divergence, heterotic malleability, and allelic imbalance switching in rice due to drought stress.
 This includes PERL, R and Linux command line scripts
 ### Authors: Eric Tsai, Shumin Kao, Li-yu Liu, Nelzo Ereful
 
 # Bioinformatics pipeline
----
 Details are outlined [here](https://github.com/nelcaster7/regulatory_divergence/blob/main/1_regulatory_divergence_pipeline.txt)
 
 1. Dataset Assessment
