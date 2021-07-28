@@ -1,3 +1,4 @@
+# (c) Eric Tsai, Shumin Kao, Li-yu Liu, Nelzo Ereful
 #!/usr/bin/perl
 
 use strict;
